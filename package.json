@@ -1,0 +1,36 @@
+{
+    "name":  "screenlens-mcp",
+    "version":  "0.1.0",
+    "description":  "MCP server that lets AI agents see your screen / camera and annotate the real screen (box / circle / arrow / text bubble). Runs as a hidden background service.",
+    "main":  "dist/main.js",
+    "private":  true,
+    "scripts":  {
+                    "build":  "node scripts/build.mjs",
+                    "dev":  "node scripts/build.mjs --watch",
+                    "start":  "node scripts/build.mjs && node scripts/start.mjs",
+                    "setup":  "node scripts/setup.mjs",
+                    "typecheck":  "tsc --noEmit -p .",
+                    "e2e":  "node scripts/run-e2e.mjs",
+                    "visual":  "node scripts/run-visual.mjs"
+                },
+    "license":  "MIT",
+    "devDependencies":  {
+                            "@types/node":  "^26.6.6",
+                            "@types/react":  "^18.3.31",
+                            "@types/react-dom":  "^18.3.7",
+                            "electron":  "^43.2.0",
+                            "esbuild":  "^0.28.2",
+                            "typescript":  "^5.9.3"
+                        },
+    "dependencies":  {
+                         "highlight.js":  "^11.12.0",
+                         "katex":  "^0.19.1",
+                         "react":  "^18.3.1",
+                         "react-dom":  "^18.3.1",
+                         "react-markdown":  "^10.1.0",
+                         "rehype-highlight":  "^7.0.2",
+                         "rehype-katex":  "^7.0.1",
+                         "remark-gfm":  "^4.0.1",
+                         "remark-math":  "^6.0.0"
+                     }
+}

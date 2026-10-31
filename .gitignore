@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env.local
+.env
+*.log
+.e2e/
+
+# 内部开发记忆，不随仓库发布
+PROJECT.md
+
+# 系统 / 编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# 构建缓存
+*.tsbuildinfo
