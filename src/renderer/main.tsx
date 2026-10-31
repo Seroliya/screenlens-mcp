@@ -4,7 +4,7 @@ import "highlight.js/styles/github-dark.css";
 import "./styles.css";
 import { ANNOTATION_CSS } from "../shared/draw";
 import { prepareImage } from "./lib/image";
-import { grabFrame, listCameras } from "./lib/camera";
+import { grabFrame, isVirtualCamera, listCameras } from "./lib/camera";
 import { App } from "./App";
 
 const style = document.createElement("style");
@@ -19,7 +19,11 @@ window.api.serveRpc(async (method, p) => {
     case "camera.grab":
       return grabFrame(p.deviceId, !!p.closeAfter);
     case "camera.list":
-      return (await listCameras()).map((d, i) => ({ id: d.deviceId, label: d.label || `摄像头 ${i + 1}` }));
+      return (await listCameras()).map((d, i) => ({
+        id: d.deviceId,
+        label: d.label || `摄像头 ${i + 1}`,
+        virtual: isVirtualCamera(d.label || ""),
+      }));
     default:
       throw new Error(`未知 RPC: ${method}`);
   }

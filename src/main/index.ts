@@ -395,12 +395,12 @@ async function bridgeHandler(method: string, p: Record<string, unknown>): Promis
       return { shot, image: img };
     }
     case "list_cameras":
-      return rendererCall<{ id: string; label: string }[]>("camera.list", {}, 10000);
+      return rendererCall<{ id: string; label: string; virtual?: boolean }[]>("camera.list", {}, 10000);
     case "camera_capture": {
       // 用户确认在这里强制执行：拒绝/超时直接抛错，不会打开摄像头
       const reason = typeof p.reason === "string" ? p.reason.trim().slice(0, 200) : "";
       await ensureCameraConsent(reason);
-      const r = await rendererCall<{ dataUrl: string; width: number; height: number; label: string }>(
+      const r = await rendererCall<{ dataUrl: string; width: number; height: number; label: string; virtual?: boolean }>(
         "camera.grab",
         // 摄像头若是为这次请求临时打开的，取完帧立即关闭
         { deviceId: p.device_id, closeAfter: true },
@@ -409,7 +409,8 @@ async function bridgeHandler(method: string, p: Record<string, unknown>): Promis
       const shot = registerShot(saveDataUrlShot(r.dataUrl, "camera", r.label, r.width, r.height));
       const img = await prep(shot);
       win?.webContents.send("app:agent-activity", { kind: "capture", shot });
-      return { shot, image: img };
+      // virtual=true 提醒调用方：这是虚拟摄像头，画面可能不是真实场景
+      return { shot, image: img, ...(r.virtual ? { virtual: true } : {}) };
     }
     case "annotate": {
       const shotId = (p.shot_id as string) || lastShotId;

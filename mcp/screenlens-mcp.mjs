@@ -260,6 +260,9 @@ async function runTool(name, args = {}) {
         `shot_id: ${s.id}\n来源: ${s.source === "screen" ? `屏幕（${s.label}）` : `摄像头（${s.label}）`}\n` +
         `原始尺寸: ${s.width}×${s.height}，返回图片: ${r.image.width}×${r.image.height}\n` +
         (grid ? "图片叠加了 0~1000 归一化坐标网格。" : "图片未叠加网格。") +
+        (r.virtual
+          ? "\n注意：这是虚拟摄像头，画面可能不是真实场景。如需真实画面，用 list_cameras 找一个非虚拟设备并用 device_id 指定。"
+          : "") +
         "调用 annotate 时使用 0~1000 归一化坐标，并传入此 shot_id。";
       return [{ type: "text", text }, imageContent(r.image.dataUrl)];
     }
@@ -269,7 +272,8 @@ async function runTool(name, args = {}) {
     }
     case "list_cameras": {
       const r = await call("list_cameras");
-      return [{ type: "text", text: r.map((c) => `${c.id}\t${c.label}`).join("\n") || "（没有检测到摄像头）" }];
+      const lines = r.map((c) => `${c.id}\t${c.label}${c.virtual ? "（虚拟设备，通常是不真实的画面）" : ""}`);
+      return [{ type: "text", text: lines.join("\n") || "（没有检测到摄像头）" }];
     }
     case "annotate": {
       const r = await call("annotate", args);
