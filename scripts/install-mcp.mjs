@@ -1,4 +1,4 @@
-// 命令行一键接入：node scripts/install-mcp.mjs dsh codex claude   （不带参数只显示状态）
+// 命令行一键接入：node scripts/install-mcp.mjs dsh codex claude workbuddy   （不带参数只显示状态）
 import * as esbuild from "esbuild";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";

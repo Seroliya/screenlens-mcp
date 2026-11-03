@@ -41,14 +41,18 @@ npm run build
 然后接入你用的客户端（可多选）：
 
 ```bash
-node scripts/install-mcp.mjs dsh     # DeepSeek Harness
-node scripts/install-mcp.mjs codex   # Codex
-node scripts/install-mcp.mjs claude  # Claude Code
+node scripts/install-mcp.mjs dsh        # DeepSeek Harness
+node scripts/install-mcp.mjs codex      # Codex
+node scripts/install-mcp.mjs claude     # Claude Code
+node scripts/install-mcp.mjs workbuddy  # WorkBuddy
 ```
 
 脚本会写入对应客户端的 MCP 配置，并把原有配置备份成 `*.bak-screenlens-<时间戳>`。
 
 重启客户端后，直接对 Agent 说「看一下我的屏幕，告诉我哪里报错了」即可。
+
+> **WorkBuddy**：配置写在 `~/.workbuddy/mcp.json`，脚本只覆盖 `screenlens` 这一项，其它 MCP 服务会保留。
+> 写入后还需要到**连接器管理 → 右上角「自定义连接器」**里对该服务点一次「信任」，MCP 才会被加载。
 
 ### 手动配置
 

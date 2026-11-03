@@ -9,7 +9,7 @@ import { execFile } from "node:child_process";
  * 这样用户机器上不需要额外的 node，也不依赖 PATH。
  */
 
-export type McpClient = "dsh" | "codex" | "claude";
+export type McpClient = "dsh" | "codex" | "claude" | "workbuddy";
 
 export interface McpLaunch {
   command: string;
@@ -29,6 +29,7 @@ const home = os.homedir();
 const DSH_FILE = path.join(home, ".dsh", "cordis.patch.yml");
 const CODEX_FILE = path.join(home, ".codex", "config.toml");
 const CLAUDE_FILE = path.join(home, ".claude.json");
+const WORKBUDDY_FILE = path.join(home, ".workbuddy", "mcp.json");
 const DSH_ID = "mcp-screenlens";
 
 const read = (f: string) => {
@@ -38,6 +39,15 @@ const read = (f: string) => {
     return "";
   }
 };
+
+/** WorkBuddy 的配置是一整份 JSON，判断是否已接入得先解析 */
+function workbuddyRegistered(): boolean {
+  try {
+    return !!JSON.parse(read(WORKBUDDY_FILE))?.mcpServers?.screenlens;
+  } catch {
+    return false;
+  }
+}
 
 function backupAndWrite(file: string, content: string) {
   if (fs.existsSync(file)) fs.copyFileSync(file, `${file}.bak-screenlens-${Date.now()}`);
@@ -67,6 +77,13 @@ export function mcpStatus(): McpClientStatus[] {
       detected: fs.existsSync(CLAUDE_FILE) || fs.existsSync(path.join(home, ".claude")),
       registered: /"screenlens"\s*:/.test(read(CLAUDE_FILE)),
       configPath: CLAUDE_FILE,
+    },
+    {
+      client: "workbuddy",
+      name: "WorkBuddy",
+      detected: fs.existsSync(path.join(home, ".workbuddy")),
+      registered: workbuddyRegistered(),
+      configPath: WORKBUDDY_FILE,
     },
   ];
 }
@@ -125,12 +142,36 @@ function installClaude(l: McpLaunch): Promise<void> {
   });
 }
 
+/**
+ * WorkBuddy 的 MCP 配置是整份 JSON（{"mcpServers": {...}}），不能像 dsh / codex 那样
+ * 往后追加文本块，所以这里读出来、只覆盖 screenlens 这一项、再写回：
+ * 用户手写的其它 MCP 服务与字段都会保留。
+ * 写入后还需要用户在「连接器管理 → 自定义连接器」里点一次「信任」，MCP 才会被加载。
+ */
+function installWorkbuddy(l: McpLaunch) {
+  let cfg: { mcpServers?: Record<string, unknown> } = {};
+  const cur = read(WORKBUDDY_FILE);
+  if (cur.trim()) {
+    try {
+      cfg = JSON.parse(cur);
+    } catch {
+      throw new Error(`${WORKBUDDY_FILE} 不是合法 JSON，请先修好再运行（原文件不会被改动）`);
+    }
+  }
+  cfg.mcpServers = {
+    ...(cfg.mcpServers ?? {}),
+    screenlens: { command: l.command, args: [l.script], env: { ELECTRON_RUN_AS_NODE: "1" } },
+  };
+  backupAndWrite(WORKBUDDY_FILE, `${JSON.stringify(cfg, null, 2)}\n`);
+}
+
 export async function installMcp(client: McpClient, l: McpLaunch): Promise<McpClientStatus> {
   if (!fs.existsSync(l.script)) throw new Error(`找不到 MCP 脚本：${l.script}`);
   const before = mcpStatus().find((s) => s.client === client)!;
   if (!before.registered) {
     if (client === "dsh") installDsh(l);
     else if (client === "codex") installCodex(l);
+    else if (client === "workbuddy") installWorkbuddy(l);
     else await installClaude(l);
   }
   return mcpStatus().find((s) => s.client === client)!;
